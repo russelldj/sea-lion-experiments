@@ -1,0 +1,1 @@
+../training_data/seq1/20150624_SSLC0013_C.png
