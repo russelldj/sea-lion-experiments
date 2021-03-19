@@ -1,5 +1,5 @@
 # 1: Detection or Track-id,  2: Video or Image Identifier,  3: Unique Frame Identifier,  4-7: Img-bbox(TL_x,TL_y,BR_x,BR_y),  8: Detection or Length Confidence,  9: Target Length (0 or -1 if invalid),  10-11+: Repeated Species, Confidence Pairs or Attributes
-# Written on: Mon Mar 15 10:33:52 2021   by: write_detected_object_set_viame_csv
+# Written on: Fri Mar 19 19:06:47 2021   by: write_detected_object_set_viame_csv
 0,20150624_SSLC0013_C.png,0,1566,1107,1617,1165,1,0,Juv,1,(note) box_source: 'refinement-2020-03-18',(note) changelog: ['created: 2020-03-18T220817+5']
 1,20150624_SSLC0013_C.png,0,2142,1976,2260,2096,1,0,Bull,1,(poly) 2246 1980 2221 1977 2169 2029 2168 2068 2151 2078 2150 2091 2175 2091 2196 2080 2248 2026 2256 1998,(kp) dot 2191.54 2048.96,(note) box_source: 'generic_det'
 2,20150624_SSLC0013_C.png,0,1567,703,1684,811,1,0,Bull,1,(kp) dot 1630.84 759.35,(note) box_source: 'cascade'
