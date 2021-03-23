@@ -1,0 +1,184 @@
+config _pipeline:_edge
+  capacity = 5
+
+process input
+ :: video_input
+  video_filename = input_list.txt
+  frame_time = 1
+  exit_on_invalid = false
+  no_path_in_name = true
+  video_reader:type = image_list
+  video_reader:vidl_ffmpeg:time_source = start_at_0
+  video_reader:image_list:image_reader:type = vxl
+  video_reader:image_list:skip_bad_images = true
+  video_reader:image_list:image_reader:vxl:force_byte = true
+  video_reader:image_list:image_reader:add_timestamp_from_filename:image_reader:type = vxl
+  video_reader:image_list:image_reader:add_timestamp_from_filename:image_reader:vxl:force_byte = true
+
+  # Key: exit_on_invalid
+  # Description:
+  #    If a frame in the middle of a sequence is invalid, do not exit and throw
+  #    an error, continue processing data. If the first frame cannot be read,
+  #    always exit regardless of this setting.
+  # Tunable: no
+  # Default value: true
+  # Current value: false
+
+  # Key: frame_time
+  # Description:
+  #    Inter frame time in seconds. If the input video stream does not supply
+  #    frame times, this value is used to create a default timestamp. If the
+  #    video stream has frame times, then those are used.
+  # Tunable: no
+  # Default value: 0.03333333
+  # Current value: 1
+
+  # Key: no_path_in_name
+  # Description:
+  #    Set to true if the output file path should not contain a full path to the
+  #    image or video file and just contain the file name for the image.
+  # Tunable: no
+  # Default value: true
+  # No current value
+
+  # Key: video_filename
+  # Description:
+  #    Name of video file.
+  # Tunable: no
+  # No default value
+  # Current value: input_list.txt
+
+  # Key: video_reader
+  # Description:
+  #    Algorithm configuration subblock to select and configure desired
+  #    implementation.
+  #
+  #    Configuration example:
+  #    block video_reader
+  #        type = impl # desired implementation
+  #        impl:param = value # implementation specific config item
+  #        # etc
+  #    endblock
+  # Tunable: no
+  # No default value
+  # No current value
+
+process detection_reader
+ :: detected_object_input
+  file_name = ../data/detections.csv
+  reader:type = viame_csv
+  reader:viame_csv:poly_to_mask = true
+
+  # Key: file_name
+  # Description:
+  #    Name of the detection set file to read.
+  # Tunable: no
+  # No default value
+  # Current value: ../data/detections.csv
+
+  # Key: reader
+  # Description:
+  #    Algorithm configuration subblock to select and configure desired
+  #    implementation.
+  #
+  #    Configuration example:
+  #    block reader
+  #        type = impl # desired implementation
+  #        impl:param = value # implementation specific config item
+  #        # etc
+  #    endblock
+  # Tunable: no
+  # No default value
+  # No current value
+
+process ensure_rgb
+ :: image_filter
+  filter:type = vxl_convert_image
+  filter:vxl_convert_image:format = byte
+  filter:vxl_convert_image:force_three_channel = true
+
+  # Key: filter
+  # Description:
+  #    Algorithm configuration subblock to select and configure desired
+  #    implementation.
+  #
+  #    Configuration example:
+  #    block filter
+  #        type = impl # desired implementation
+  #        impl:param = value # implementation specific config item
+  #        # etc
+  #    endblock
+  # Tunable: no
+  # No default value
+  # No current value
+
+connect from input.image
+        to   ensure_rgb.image
+
+process detection_refiner
+ :: refine_detections
+  refiner:type = ocv_watershed
+  refiner:ocv_watershed:seed_scale_factor = 0.2
+
+  # Key: refiner
+  # Description:
+  #    Algorithm configuration subblock to select and configure desired
+  #    implementation.
+  #
+  #    Configuration example:
+  #    block refiner
+  #        type = impl # desired implementation
+  #        impl:param = value # implementation specific config item
+  #        # etc
+  #    endblock
+  # Tunable: no
+  # No default value
+  # No current value
+
+connect from ensure_rgb.image
+        to   detection_refiner.image
+
+connect from detection_reader.detected_object_set
+        to   detection_refiner.detected_object_set
+
+process detector_writer
+ :: detected_object_output
+  file_name = ../output/watershed_detections.csv
+  writer:type = viame_csv
+  writer:viame_csv:mask_to_poly_tol = 0.05
+
+  # Key: file_name
+  # Description:
+  #    Name of the detection set file to write.
+  # Tunable: no
+  # No default value
+  # Current value: ../output/watershed_detections.csv
+
+  # Key: frame_list_output
+  # Description:
+  #    Optional frame list output to also write.
+  # Tunable: no
+  # No default value
+  # No current value
+
+  # Key: writer
+  # Description:
+  #    Algorithm configuration subblock to select and configure desired
+  #    implementation.
+  #
+  #    Configuration example:
+  #    block writer
+  #        type = impl # desired implementation
+  #        impl:param = value # implementation specific config item
+  #        # etc
+  #    endblock
+  # Tunable: no
+  # No default value
+  # No current value
+
+connect from input.file_name
+        to   detector_writer.image_file_name
+
+connect from detection_refiner.detected_object_set
+        to   detector_writer.detected_object_set
+

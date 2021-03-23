@@ -7,7 +7,7 @@ config _pipeline:_edge
   :capacity                                                      5
 
 # ====================== INPUT FRAME LIST ========================
-include common_default_input_with_downsampler.pipe
+include common_default_input.pipe
 
 process detection_reader
   :: detected_object_input
@@ -24,13 +24,13 @@ process ensure_rgb
     :force_three_channel                                      true
   endblock
 
-connect from downsampler.output_1
+connect from input.image
         to   ensure_rgb.image
 
 process detection_refiner
   :: refine_detections
   :refiner:type                                        ocv_grabcut
-  :refiner:ocv_grabcut:seed_scale_factor                       0.2
+  :refiner:ocv_grabcut:foreground_scale_factor                 0.2
 
 connect from ensure_rgb.image
         to   detection_refiner.image
@@ -43,7 +43,7 @@ process detector_writer
   :writer:type                                           viame_csv
   :writer:viame_csv:mask_to_poly_tol                          0.05
 
-connect from downsampler.output_2
+connect from input.file_name
         to   detector_writer.image_file_name
 connect from detection_refiner.detected_object_set
         to   detector_writer.detected_object_set
